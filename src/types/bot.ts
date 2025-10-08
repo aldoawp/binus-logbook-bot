@@ -11,6 +11,8 @@ export interface BotConfig {
   clockInTime: string;
   clockOutTime: string;
   excelFilePath: string;
+  logbookMonth: string;
+  internshipSemester: string;
 }
 
 export interface BotState {

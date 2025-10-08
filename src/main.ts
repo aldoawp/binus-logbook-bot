@@ -7,12 +7,27 @@ import * as path from 'path';
 // Load environment variables
 dotenv.config();
 
-// Set environment variables explicitly for testing
-process.env.EMAIL = 'aldo.wibowo@binus.ac.id';
-process.env.PASSWORD = 'Piloka121';
+// Month translation mapping
+const MONTH_TRANSLATION: { [key: string]: string } = {
+  'FEB': 'February',
+  'MAR': 'March', 
+  'APR': 'April',
+  'MAY': 'May',
+  'JUN': 'June',
+  'JUL': 'July',
+  'AUG': 'August',
+  'SEP': 'September',
+  'OCT': 'October',
+  'NOV': 'November',
+  'DEC': 'December',
+  'JAN': 'January'
+};
 
-// Debug: Check if environment variables are loaded
-console.log('🔍 Environment variables loaded');
+// Semester translation mapping
+const SEMESTER_TRANSLATION: { [key: string]: string } = {
+  'EVEN': '2420',
+  'ODD': '2510'
+};
 
 async function main() {
   const loginBot = new LoginBot();
@@ -21,48 +36,46 @@ async function main() {
     console.log('🚀 Starting logbook automation bot...');
     
     // Always perform fresh login
-    console.log('🔐 Performing fresh login...');
     const success = await loginBot.login();
     
-    if (success) {
-      console.log('✅ Login successful');
-    } else {
+    if (!success) {
       console.log('❌ Login failed');
       process.exit(1);
     }
     
-    // Initialize activity bot with configuration
+    // Initialize activity bot with configuration from environment variables
+    const logbookMonthEnv = process.env.LOGBOOK_MONTH || 'SEP';
+    const internshipSemesterEnv = process.env.INTERNSHIP_SEMESTER || 'ODD';
+    
     const botConfig: BotConfig = {
-      clockInTime: '08:00 am',
-      clockOutTime: '05:00 pm',
-      excelFilePath: path.join(process.cwd(), 'src', 'data', 'monthly_activity.xlsx')
+      clockInTime: process.env.CLOCK_IN_TIME || '08:00',
+      clockOutTime: process.env.CLOCK_OUT_TIME || '17:00',
+      excelFilePath: process.env.EXCEL_FILE_PATH || path.join(process.cwd(), 'src', 'data', 'monthly_activity.xlsx'),
+      logbookMonth: MONTH_TRANSLATION[logbookMonthEnv] || 'September',
+      internshipSemester: SEMESTER_TRANSLATION[internshipSemesterEnv] || '2510'
     };
     
     const activityBot = new ActivityBot(loginBot.getPage()!, botConfig);
     
     try {
       // Phase 1: Navigate to activity page
-      console.log('\n🎯 Starting Phase 1: Navigation...');
       await activityBot.navigateToActivityPage();
       
       // Phase 2: Fill all activities
-      console.log('\n🎯 Starting Phase 2: Activity Filling...');
       await activityBot.fillAllActivities();
       
       // Display final results
       const state = activityBot.getState();
       const errors = activityBot.getErrors();
       
-      console.log('\n📊 Final Results:');
       console.log(`✅ Successfully processed: ${state.processedDates.length} dates`);
-      console.log(`📅 Processed dates: ${state.processedDates.join(', ')}`);
       
       if (errors.length > 0) {
-        console.log(`⚠️ Errors encountered: ${errors.length}`);
+        console.log(`⚠️ Errors: ${errors.length}`);
         errors.forEach(error => console.log(`   - ${error}`));
       }
       
-      console.log('\n🎉 Bot execution completed successfully!');
+      console.log('🎉 Bot execution completed successfully!');
       
     } catch (error) {
       console.error('❌ Activity bot failed:', error);
@@ -71,12 +84,10 @@ async function main() {
       const state = activityBot.getState();
       const errors = activityBot.getErrors();
       
-      console.log('\n📊 Partial Results:');
       console.log(`✅ Successfully processed: ${state.processedDates.length} dates`);
-      console.log(`📅 Processed dates: ${state.processedDates.join(', ')}`);
       
       if (errors.length > 0) {
-        console.log(`⚠️ Errors encountered: ${errors.length}`);
+        console.log(`⚠️ Errors: ${errors.length}`);
         errors.forEach(error => console.log(`   - ${error}`));
       }
       
@@ -89,7 +100,6 @@ async function main() {
   } finally {
     // Always close the browser
     await loginBot.close();
-    console.log('✅ Browser closed');
   }
 }
 
