@@ -31,16 +31,25 @@ class ActivityBot {
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       
-      // Convert to JSON, starting from row 2 (A2, B2, etc.)
+      // Convert to JSON with specific column mapping
+      // Activity is in column B (index 1), Description is in column C (index 2)
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
-        header: ['activity', 'description'],
-        range: 1 // Skip header row
+        header: ['', 'activity', 'description'], // Empty string for column A, then activity and description
+        range: 1 // Skip header row (row 1), start from row 2
       });
       
-      this.excelData = jsonData as ActivityData[];
+      // Filter out any empty rows and ensure we have valid data
+      this.excelData = jsonData
+        .filter((row: any) => row.activity && row.description) // Only include rows with both activity and description
+        .map((row: any) => ({
+          activity: row.activity?.toString().trim() || '',
+          description: row.description?.toString().trim() || ''
+        })) as ActivityData[];
+      
       this.state.totalRows = this.excelData.length;
       
       console.log(`✅ Loaded ${this.excelData.length} rows from Excel`);
+      console.log(`📋 Sample data: Activity="${this.excelData[0]?.activity}", Description="${this.excelData[0]?.description}"`);
     } catch (error) {
       console.error('❌ Failed to load Excel data:', error);
       throw error;
