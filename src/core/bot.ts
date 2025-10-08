@@ -221,10 +221,10 @@ class ActivityBot {
   }
 
   /**
-   * Handle Saturday (OFF) entries
+   * Handle OFF day entries (when activity or description contains "OFF")
    */
-  private async handleSaturdayEntry(): Promise<void> {
-    console.log('📅 Handling Saturday entry (OFF)...');
+  private async handleOffDayEntry(): Promise<void> {
+    console.log('📅 Handling OFF day entry...');
     
     try {
       // Click OFF button with fallback locators
@@ -244,10 +244,10 @@ class ActivityBot {
         // Modal might already be closed, continue
       }
       
-      console.log('✅ Successfully handled Saturday entry');
+      console.log('✅ Successfully handled OFF day entry');
       
     } catch (error) {
-      console.error('❌ Failed to handle Saturday entry:', error);
+      console.error('❌ Failed to handle OFF day entry:', error);
       throw error;
     }
   }
@@ -313,12 +313,18 @@ class ActivityBot {
           await actionButton.click();
           await this.page.waitForTimeout(1500); // Reduced wait time for faster execution
           
-          // Check if it's Saturday
-          if (dayOfWeek === 'Sat') {
-            console.log('📅 Saturday detected - setting OFF...');
-            await this.handleSaturdayEntry();
+          // Get activity data to check for OFF values
+          const activityData = this.excelData[i];
+          const isOffDay = activityData && (
+            activityData.activity?.toUpperCase().trim() === 'OFF' || 
+            activityData.description?.toUpperCase().trim() === 'OFF'
+          );
+          
+          if (isOffDay) {
+            console.log('📅 OFF day detected - setting OFF...');
+            await this.handleOffDayEntry();
           } else {
-            console.log('📅 Weekday detected - filling activity...');
+            console.log('📅 Regular day detected - filling activity...');
             // Use the row index to get the corresponding Excel data in order
             await this.fillActivityForm(i);
           }
