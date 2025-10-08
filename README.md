@@ -7,6 +7,7 @@ An automated bot that streamlines the process of submitting monthly student inte
 - 🚀 **Automated Data Entry**: Fills out logbook entries automatically
 - 📊 **Excel Integration**: Reads data directly from Excel files
 - 🗓️ **Smart OFF Day Detection**: Automatically handles days marked as "OFF"
+- ⚙️ **Flexible Configuration**: Customize month, semester, clock times, and Excel file path
 - 🔒 **Secure**: Your credentials are stored locally and never shared
 - ⚡ **Fast**: Processes multiple entries in minutes instead of hours
 - 🛡️ **Error Handling**: Robust error handling with detailed logging
@@ -51,15 +52,28 @@ cp env.example .env
 # Or create a new .env file manually
 ```
 
-Add your BINUS credentials to the `.env` file:
+Add your BINUS credentials and configuration to the `.env` file:
 
 ```env
-BINUS_EMAIL=your.email@binus.ac.id
-BINUS_PASSWORD=your_password
-CLOCK_IN_TIME=08:00
-CLOCK_OUT_TIME=17:00
-MONTHLY_LOG=SEPTEMBER
-SEMESTER=ODD
+# Login credentials
+EMAIL=your.email@binus.ac.id
+PASSWORD=your_password
+
+# Clock in and out times (12-hour format: HH:MM am or pm)
+CLOCK_IN_TIME="08:00 am"
+CLOCK_OUT_TIME="05:00 pm"
+
+# Logbook month (use month abbreviation)
+# EVEN semester months: FEB, MAR, APR, MAY, JUN, JUL, AUG
+# ODD semester months: SEP, OCT, NOV, DEC, JAN, FEB
+LOGBOOK_MONTH=SEP
+
+# Internship semester (EVEN or ODD)
+# EVEN: 2420, ODD: 2510
+INTERNSHIP_SEMESTER=ODD
+
+# Excel file path
+EXCEL_FILE_PATH=./src/data/monthly_activity.xlsx
 ```
 
 > ⚠️ **Security Note**: Your credentials are stored locally on your machine and are never shared or uploaded anywhere.
@@ -126,12 +140,38 @@ logbook_bot/
 
 ### Environment Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `BINUS_EMAIL` | Your BINUS email address | `john.doe@binus.ac.id` |
-| `BINUS_PASSWORD` | Your BINUS password | `your_password` |
-| `CLOCK_IN_TIME` | Default clock-in time | `08:00` |
-| `CLOCK_OUT_TIME` | Default clock-out time | `17:00` |
+| Variable | Description | Example | Options |
+|----------|-------------|---------|---------|
+| `EMAIL` | Your BINUS email address | `john.doe@binus.ac.id` | - |
+| `PASSWORD` | Your BINUS password | `your_password` | - |
+| `CLOCK_IN_TIME` | Clock-in time (12-hour format) | `"08:00 am"` | Any valid time |
+| `CLOCK_OUT_TIME` | Clock-out time (12-hour format) | `"05:00 pm"` | Any valid time |
+| `LOGBOOK_MONTH` | Month for logbook entries | `SEP` | FEB, MAR, APR, MAY, JUN, JUL, AUG, SEP, OCT, NOV, DEC, JAN |
+| `INTERNSHIP_SEMESTER` | Semester type | `ODD` | EVEN, ODD |
+| `EXCEL_FILE_PATH` | Path to your Excel file | `./src/data/monthly_activity.xlsx` | Any valid file path |
+
+### Month and Semester Configuration
+
+The bot supports flexible month and semester configuration:
+
+**Month Options:**
+- **EVEN Semester**: FEB, MAR, APR, MAY, JUN, JUL, AUG
+- **ODD Semester**: SEP, OCT, NOV, DEC, JAN, FEB
+
+**Semester Options:**
+- **EVEN**: Maps to semester code 2420
+- **ODD**: Maps to semester code 2510
+
+**Examples:**
+```env
+# For September (ODD semester)
+LOGBOOK_MONTH=SEP
+INTERNSHIP_SEMESTER=ODD
+
+# For February (can be either semester)
+LOGBOOK_MONTH=FEB
+INTERNSHIP_SEMESTER=EVEN  # or ODD
+```
 
 ### Excel File Configuration
 
@@ -141,13 +181,21 @@ The bot expects your Excel file to have:
 - **Column C**: Activity description
 - **OFF days**: Mark with "OFF" in either Activity or Description column
 
+**Custom Excel File Path:**
+You can specify a custom path to your Excel file using the `EXCEL_FILE_PATH` environment variable:
+```env
+EXCEL_FILE_PATH=./path/to/your/custom_activity.xlsx
+```
+
 ## 🛠️ Troubleshooting
 
 ### Common Issues
 
 **Q: The bot can't find my Excel file**
-- Make sure the file is named `monthly_activity.xlsx` and is in the `src/data/` folder
+- Check the `EXCEL_FILE_PATH` in your `.env` file
+- Make sure the file path is correct and the file exists
 - Check that the file is not open in Excel while running the bot
+- Default path is `./src/data/monthly_activity.xlsx`
 
 **Q: Login failed**
 - Verify your credentials in the `.env` file
@@ -162,6 +210,16 @@ The bot expects your Excel file to have:
 **Q: OFF days are not being handled correctly**
 - Make sure "OFF" is written exactly as "OFF" (case-sensitive)
 - Check that it's in either the Activity or Description column
+
+**Q: Wrong month or semester is being used**
+- Check your `LOGBOOK_MONTH` setting (use month abbreviation like SEP, OCT, etc.)
+- Verify your `INTERNSHIP_SEMESTER` setting (EVEN or ODD)
+- Make sure the month matches the semester (EVEN: FEB-AUG, ODD: SEP-JAN)
+
+**Q: Clock times are not working correctly**
+- Use 12-hour format with am/pm (e.g., "08:00 am", "05:00 pm")
+- Make sure to include quotes around the time values
+- Check that the format matches exactly: "HH:MM am/pm"
 
 ### Getting Help
 
