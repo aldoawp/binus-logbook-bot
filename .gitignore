@@ -1,3 +1,4 @@
 node_modules
 .env
 specs
+src/data/login-session.json

@@ -11,7 +11,8 @@
     "start": "node --import tsx src/bot.ts"
   },
   "dependencies": {
-    "playwright": "^1.56.0"
+    "playwright": "^1.56.0",
+    "dotenv": "^16.3.1"
   },
   "devDependencies": {
     "@types/node": "^24.7.0",
