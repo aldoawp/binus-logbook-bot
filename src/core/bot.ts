@@ -257,24 +257,19 @@ class ActivityBot {
       console.log('📍 Waiting for logbook table to load...');
       await this.page.waitForSelector(BOT_LOCATORS.LOG_BOOK_TABLE, { timeout: 15000 });
       
-      // Get all action buttons (both ENTRY and Edit buttons)
-      const entryButtons = await this.page.locator(BOT_LOCATORS.ENTRY_BUTTON).all();
-      const editButtons = await this.page.locator(BOT_LOCATORS.EDIT_BUTTON).all();
-      console.log(`📍 Found ${entryButtons.length} entry buttons and ${editButtons.length} edit buttons`);
+      // Get all table rows to ensure we process them in the correct order
+      const tableRows = await this.page.locator('table#logBookTable tbody tr').all();
+      console.log(`📍 Found ${tableRows.length} table rows`);
       
-      // Combine all buttons for processing
-      const allButtons = [...entryButtons, ...editButtons];
-      console.log(`📍 Total action buttons found: ${allButtons.length}`);
+      this.state.totalRows = tableRows.length;
       
-      this.state.totalRows = allButtons.length;
-      
-      // Process each row
-      for (let i = 0; i < allButtons.length; i++) {
-        console.log(`\n🔄 Processing row ${i + 1}/${allButtons.length}...`);
+      // Process each row in order (top to bottom)
+      for (let i = 0; i < tableRows.length; i++) {
+        console.log(`\n🔄 Processing row ${i + 1}/${tableRows.length}...`);
         
         try {
           // Get the date for this row
-          const dateCell = await this.page.locator(BOT_LOCATORS.DATE_COLUMN).nth(i);
+          const dateCell = await tableRows[i].locator(BOT_LOCATORS.DATE_COLUMN).first();
           const dateText = await dateCell.textContent();
           
           if (!dateText) {
@@ -285,17 +280,17 @@ class ActivityBot {
           const dayOfWeek = this.extractDayFromDate(dateText.trim());
           console.log(`📅 Date: ${dateText.trim()}, Day: ${dayOfWeek}`);
           
-          // Find the correct button for this row (either ENTRY or Edit)
+          // Find the action button for this specific row (either ENTRY or Edit)
           let actionButton = null;
           try {
-            // First try to find ENTRY button for this row
-            actionButton = await this.page.locator(BOT_LOCATORS.ENTRY_BUTTON).nth(i);
+            // First try to find ENTRY button in this row
+            actionButton = await tableRows[i].locator(BOT_LOCATORS.ENTRY_BUTTON).first();
             await actionButton.waitFor({ state: 'visible', timeout: 1000 });
             console.log(`🔘 Found ENTRY button for row ${i + 1}`);
           } catch (error) {
             try {
-              // If ENTRY button not found, try Edit button
-              actionButton = await this.page.locator(BOT_LOCATORS.EDIT_BUTTON).nth(i);
+              // If ENTRY button not found, try Edit button in this row
+              actionButton = await tableRows[i].locator(BOT_LOCATORS.EDIT_BUTTON).first();
               await actionButton.waitFor({ state: 'visible', timeout: 1000 });
               console.log(`🔘 Found Edit button for row ${i + 1}`);
             } catch (editError) {
@@ -315,6 +310,7 @@ class ActivityBot {
             await this.handleSaturdayEntry();
           } else {
             console.log('📅 Weekday detected - filling activity...');
+            // Use the row index to get the corresponding Excel data in order
             await this.fillActivityForm(i);
           }
           

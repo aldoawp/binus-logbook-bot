@@ -57,7 +57,7 @@ class LoginBot {
    * Step 2: Click initial login button
    */
   private async clickInitialLoginButton(): Promise<void> {
-    await this.page!.waitForSelector(LOGIN_LOCATORS.INITIAL_LOGIN_BUTTON, { timeout: 10000 });
+    await this.page!.waitForSelector(LOGIN_LOCATORS.INITIAL_LOGIN_BUTTON, { timeout: 30000 });
     await this.page!.click(LOGIN_LOCATORS.INITIAL_LOGIN_BUTTON);
     await this.page!.waitForTimeout(2000); // Faster than waiting for full page load
   }
@@ -66,7 +66,7 @@ class LoginBot {
    * Step 3: Click Microsoft sign in button
    */
   private async clickMicrosoftSignInButton(): Promise<void> {
-    await this.page!.waitForSelector(LOGIN_LOCATORS.MICROSOFT_SIGNIN_BUTTON, { timeout: 10000 });
+    await this.page!.waitForSelector(LOGIN_LOCATORS.MICROSOFT_SIGNIN_BUTTON, { timeout: 30000 });
     await this.page!.click(LOGIN_LOCATORS.MICROSOFT_SIGNIN_BUTTON);
     await this.page!.waitForTimeout(2000); // Faster than waiting for full page load
   }
@@ -75,7 +75,7 @@ class LoginBot {
    * Step 4: Fill email and click next
    */
   private async fillEmailAndNext(credentials: LoginCredentials): Promise<void> {
-    await this.page!.waitForSelector(LOGIN_LOCATORS.EMAIL_INPUT, { timeout: 10000 });
+    await this.page!.waitForSelector(LOGIN_LOCATORS.EMAIL_INPUT, { timeout: 30000 });
     await this.page!.fill(LOGIN_LOCATORS.EMAIL_INPUT, credentials.email);
     
     // Try multiple possible selectors for the next button
@@ -91,7 +91,7 @@ class LoginBot {
     let buttonClicked = false;
     for (const selector of nextButtonSelectors) {
       try {
-        await this.page!.waitForSelector(selector, { timeout: 5000 });
+        await this.page!.waitForSelector(selector, { timeout: 15000 });
         await this.page!.click(selector);
         buttonClicked = true;
         break;
@@ -112,10 +112,10 @@ class LoginBot {
    * Step 6: Fill password and sign in
    */
   private async fillPasswordAndSignIn(credentials: LoginCredentials): Promise<void> {
-    await this.page!.waitForSelector(LOGIN_LOCATORS.PASSWORD_INPUT, { timeout: 10000 });
+    await this.page!.waitForSelector(LOGIN_LOCATORS.PASSWORD_INPUT, { timeout: 30000 });
     await this.page!.fill(LOGIN_LOCATORS.PASSWORD_INPUT, credentials.password);
     await this.page!.click(LOGIN_LOCATORS.PASSWORD_SIGNIN_BUTTON);
-    await this.page!.waitForTimeout(2000); // Faster than waiting for full page load
+    await this.page!.waitForTimeout(10000); // Faster than waiting for full page load
   }
 
   /**
@@ -125,7 +125,7 @@ class LoginBot {
     try {
       await this.page!.waitForSelector(LOGIN_LOCATORS.STAY_SIGNED_IN_BUTTON, { timeout: 5000 });
       await this.page!.click(LOGIN_LOCATORS.STAY_SIGNED_IN_BUTTON);
-      await this.page!.waitForTimeout(2000); // Faster than waiting for full page load
+      await this.page!.waitForTimeout(10000); // Faster than waiting for full page load
     } catch (error) {
       // Stay signed in prompt not found or already handled
     }
