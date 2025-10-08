@@ -1,9 +1,7 @@
 import { chromium, Browser, BrowserContext, Page } from 'playwright';
 import { LOGIN_LOCATORS } from '../constant/locator.js';
 import { URLS } from '../constant/url.js';
-import { LoginCredentials, LoginSession } from '../types/login.js';
-import * as fs from 'fs';
-import * as path from 'path';
+import { LoginCredentials } from '../types/login.js';
 
 class LoginBot {
   private browser: Browser | null = null;
@@ -50,7 +48,7 @@ class LoginBot {
    */
   private async navigateToLoginPage(): Promise<void> {
     await this.page!.goto(URLS.LOGIN_PAGE, { 
-      waitUntil: 'networkidle',
+      waitUntil: 'domcontentloaded', // Faster than networkidle
       timeout: 30000 
     });
   }
@@ -61,7 +59,7 @@ class LoginBot {
   private async clickInitialLoginButton(): Promise<void> {
     await this.page!.waitForSelector(LOGIN_LOCATORS.INITIAL_LOGIN_BUTTON, { timeout: 10000 });
     await this.page!.click(LOGIN_LOCATORS.INITIAL_LOGIN_BUTTON);
-    await this.page!.waitForLoadState('networkidle');
+    await this.page!.waitForTimeout(2000); // Faster than waiting for full page load
   }
 
   /**
@@ -70,7 +68,7 @@ class LoginBot {
   private async clickMicrosoftSignInButton(): Promise<void> {
     await this.page!.waitForSelector(LOGIN_LOCATORS.MICROSOFT_SIGNIN_BUTTON, { timeout: 10000 });
     await this.page!.click(LOGIN_LOCATORS.MICROSOFT_SIGNIN_BUTTON);
-    await this.page!.waitForLoadState('networkidle');
+    await this.page!.waitForTimeout(2000); // Faster than waiting for full page load
   }
 
   /**
@@ -107,7 +105,7 @@ class LoginBot {
       throw new Error('Could not find the next button with any of the expected selectors');
     }
     
-    await this.page!.waitForLoadState('networkidle');
+    await this.page!.waitForTimeout(2000); // Faster than waiting for full page load
   }
 
   /**
@@ -117,7 +115,7 @@ class LoginBot {
     await this.page!.waitForSelector(LOGIN_LOCATORS.PASSWORD_INPUT, { timeout: 10000 });
     await this.page!.fill(LOGIN_LOCATORS.PASSWORD_INPUT, credentials.password);
     await this.page!.click(LOGIN_LOCATORS.PASSWORD_SIGNIN_BUTTON);
-    await this.page!.waitForLoadState('networkidle');
+    await this.page!.waitForTimeout(2000); // Faster than waiting for full page load
   }
 
   /**
@@ -127,56 +125,12 @@ class LoginBot {
     try {
       await this.page!.waitForSelector(LOGIN_LOCATORS.STAY_SIGNED_IN_BUTTON, { timeout: 5000 });
       await this.page!.click(LOGIN_LOCATORS.STAY_SIGNED_IN_BUTTON);
-      await this.page!.waitForLoadState('networkidle');
+      await this.page!.waitForTimeout(2000); // Faster than waiting for full page load
     } catch (error) {
       // Stay signed in prompt not found or already handled
     }
   }
 
-  /**
-   * Save login session to file
-   */
-  private async saveLoginSession(): Promise<void> {
-    const cookies = await this.context!.cookies();
-    const localStorage = await this.page!.evaluate(() => {
-      const storage: any = {};
-      for (let i = 0; i < window.localStorage.length; i++) {
-        const key = window.localStorage.key(i);
-        if (key) {
-          storage[key] = window.localStorage.getItem(key);
-        }
-      }
-      return storage;
-    });
-    
-    const sessionStorage = await this.page!.evaluate(() => {
-      const storage: any = {};
-      for (let i = 0; i < window.sessionStorage.length; i++) {
-        const key = window.sessionStorage.key(i);
-        if (key) {
-          storage[key] = window.sessionStorage.getItem(key);
-        }
-      }
-      return storage;
-    });
-
-    const session: LoginSession = {
-      cookies,
-      localStorage,
-      sessionStorage,
-      timestamp: new Date().toISOString()
-    };
-
-    const sessionPath = path.join(process.cwd(), 'src', 'data', 'login-session.json');
-    const dataDir = path.dirname(sessionPath);
-    
-    // Ensure data directory exists
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-
-    fs.writeFileSync(sessionPath, JSON.stringify(session, null, 2));
-  }
 
   /**
    * Main login process
@@ -206,9 +160,6 @@ class LoginBot {
       
       // Step 8: Handle stay signed in prompt
       await this.handleStaySignedIn();
-      
-      // Save login session
-      await this.saveLoginSession();
       
       return true;
       
@@ -244,51 +195,6 @@ class LoginBot {
     return this.context;
   }
 
-  /**
-   * Load existing login session
-   */
-  public async loadSession(): Promise<void> {
-    // Initialize browser first
-    await this.initializeBrowser();
-    
-    // Load session data
-    const sessionPath = path.join(process.cwd(), 'src', 'data', 'login-session.json');
-    const sessionData = JSON.parse(fs.readFileSync(sessionPath, 'utf8'));
-    
-    // Restore cookies
-    if (sessionData.cookies && sessionData.cookies.length > 0) {
-      await this.context!.addCookies(sessionData.cookies);
-    }
-    
-    // Restore localStorage
-    if (sessionData.localStorage && Object.keys(sessionData.localStorage).length > 0) {
-      await this.page!.evaluate((storage) => {
-        for (const [key, value] of Object.entries(storage)) {
-          window.localStorage.setItem(key, value as string);
-        }
-      }, sessionData.localStorage);
-    }
-    
-    // Restore sessionStorage
-    if (sessionData.sessionStorage && Object.keys(sessionData.sessionStorage).length > 0) {
-      await this.page!.evaluate((storage) => {
-        for (const [key, value] of Object.entries(storage)) {
-          window.sessionStorage.setItem(key, value as string);
-        }
-      }, sessionData.sessionStorage);
-    }
-  }
-
-  /**
-   * Navigate to dashboard
-   */
-  public async navigateToDashboard(): Promise<void> {
-    const dashboardUrl = 'https://enrichment.apps.binus.ac.id/Dashboard';
-    await this.page!.goto(dashboardUrl, { 
-      waitUntil: 'networkidle',
-      timeout: 30000 
-    });
-  }
 }
 
 export default LoginBot;

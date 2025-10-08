@@ -5,9 +5,3 @@ export interface LoginCredentials {
   password: string;
 }
 
-export interface LoginSession {
-  cookies: any[];
-  localStorage: any;
-  sessionStorage: any;
-  timestamp: string;
-}

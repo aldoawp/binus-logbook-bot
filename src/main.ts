@@ -1,6 +1,7 @@
 import LoginBot from './core/login.js';
+import ActivityBot from './core/bot.js';
+import { BotConfig } from './types/bot.js';
 import * as dotenv from 'dotenv';
-import * as fs from 'fs';
 import * as path from 'path';
 
 // Load environment variables
@@ -17,55 +18,69 @@ async function main() {
   const loginBot = new LoginBot();
   
   try {
-    console.log('🚀 Starting login bot...');
+    console.log('🚀 Starting logbook automation bot...');
     
-    // Check if login session exists
-    const sessionPath = path.join(process.cwd(), 'src', 'data', 'login-session.json');
-    let hasValidSession = false;
+    // Always perform fresh login
+    console.log('🔐 Performing fresh login...');
+    const success = await loginBot.login();
     
-    if (fs.existsSync(sessionPath)) {
-      try {
-        const sessionData = JSON.parse(fs.readFileSync(sessionPath, 'utf8'));
-        const sessionAge = Date.now() - new Date(sessionData.timestamp).getTime();
-        const maxAge = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-        
-        if (sessionAge < maxAge) {
-          console.log('✅ Using existing session');
-          hasValidSession = true;
-        } else {
-          console.log('⚠️ Session expired, performing fresh login');
-        }
-      } catch (error) {
-        console.log('⚠️ Invalid session, performing fresh login');
-      }
+    if (success) {
+      console.log('✅ Login successful');
     } else {
-      console.log('📄 No session found, performing fresh login');
+      console.log('❌ Login failed');
+      process.exit(1);
     }
     
-    if (hasValidSession) {
-      // Load existing session and navigate to dashboard
-      await loginBot.loadSession();
-      await loginBot.navigateToDashboard();
+    // Initialize activity bot with configuration
+    const botConfig: BotConfig = {
+      clockInTime: '08:00 am',
+      clockOutTime: '05:00 pm',
+      excelFilePath: path.join(process.cwd(), 'src', 'data', 'monthly_activity.xlsx')
+    };
+    
+    const activityBot = new ActivityBot(loginBot.getPage()!, botConfig);
+    
+    try {
+      // Phase 1: Navigate to activity page
+      console.log('\n🎯 Starting Phase 1: Navigation...');
+      await activityBot.navigateToActivityPage();
       
-      console.log('✅ Session restored successfully');
+      // Phase 2: Fill all activities
+      console.log('\n🎯 Starting Phase 2: Activity Filling...');
+      await activityBot.fillAllActivities();
       
-      // Keep the browser open for 5 seconds to see the result
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      // Display final results
+      const state = activityBot.getState();
+      const errors = activityBot.getErrors();
       
-    } else {
-      // Perform fresh login
-      const success = await loginBot.login();
+      console.log('\n📊 Final Results:');
+      console.log(`✅ Successfully processed: ${state.processedDates.length} dates`);
+      console.log(`📅 Processed dates: ${state.processedDates.join(', ')}`);
       
-      if (success) {
-        console.log('✅ Login successful');
-        
-        // Keep the browser open for 5 seconds to see the result
-        await new Promise(resolve => setTimeout(resolve, 5000));
-        
-      } else {
-        console.log('❌ Login failed');
-        process.exit(1);
+      if (errors.length > 0) {
+        console.log(`⚠️ Errors encountered: ${errors.length}`);
+        errors.forEach(error => console.log(`   - ${error}`));
       }
+      
+      console.log('\n🎉 Bot execution completed successfully!');
+      
+    } catch (error) {
+      console.error('❌ Activity bot failed:', error);
+      
+      // Display partial results
+      const state = activityBot.getState();
+      const errors = activityBot.getErrors();
+      
+      console.log('\n📊 Partial Results:');
+      console.log(`✅ Successfully processed: ${state.processedDates.length} dates`);
+      console.log(`📅 Processed dates: ${state.processedDates.join(', ')}`);
+      
+      if (errors.length > 0) {
+        console.log(`⚠️ Errors encountered: ${errors.length}`);
+        errors.forEach(error => console.log(`   - ${error}`));
+      }
+      
+      throw error;
     }
     
   } catch (error) {
