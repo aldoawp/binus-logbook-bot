@@ -1,33 +1,12 @@
 import LoginBot from './core/login.js';
 import ActivityBot from './core/bot.js';
 import { BotConfig } from './types/bot.js';
+import { getMonthName, getSemesterCode } from './utils/mapping.js';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
 // Load environment variables
 dotenv.config();
-
-// Month translation mapping
-const MONTH_TRANSLATION: { [key: string]: string } = {
-  'FEB': 'February',
-  'MAR': 'March', 
-  'APR': 'April',
-  'MAY': 'May',
-  'JUN': 'June',
-  'JUL': 'July',
-  'AUG': 'August',
-  'SEP': 'September',
-  'OCT': 'October',
-  'NOV': 'November',
-  'DEC': 'December',
-  'JAN': 'January'
-};
-
-// Semester translation mapping
-const SEMESTER_TRANSLATION: { [key: string]: string } = {
-  'EVEN': '2420',
-  'ODD': '2510'
-};
 
 async function main() {
   const loginBot = new LoginBot();
@@ -51,8 +30,8 @@ async function main() {
       clockInTime: process.env.CLOCK_IN_TIME || '08:00',
       clockOutTime: process.env.CLOCK_OUT_TIME || '17:00',
       excelFilePath: process.env.EXCEL_FILE_PATH || path.join(process.cwd(), 'src', 'data', 'monthly_activity.xlsx'),
-      logbookMonth: MONTH_TRANSLATION[logbookMonthEnv] || 'September',
-      internshipSemester: SEMESTER_TRANSLATION[internshipSemesterEnv] || '2510'
+      logbookMonth: getMonthName(logbookMonthEnv),
+      internshipSemester: getSemesterCode(internshipSemesterEnv)
     };
     
     const activityBot = new ActivityBot(loginBot.getPage()!, botConfig);

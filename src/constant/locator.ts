@@ -1,3 +1,5 @@
+import { getEmail, getMonthName, getSemesterCode } from '../utils/mapping.js';
+
 // Login page locators based on the algorithm specification
 export const LOGIN_LOCATORS = {
   // Step 2: Initial login button
@@ -26,11 +28,20 @@ export const LOGIN_LOCATORS = {
 export const BOT_LOCATORS = {
   // Phase 1: Navigation locators
   SEMESTER_DROPDOWN: 'div.ui.fluid.search.dropdown.faculty.selection',
-  SEMESTER_OPTION_ODD: 'div.menu.transition div.item[data-value="2510"]',
+  get SEMESTER_OPTION() {
+    const semesterCode = getSemesterCode(process.env.INTERNSHIP_SEMESTER || 'ODD');
+    return `div.menu.transition div.item[data-value="${semesterCode}"]`;
+  },
   ACTIVITY_BUTTON: 'a.button.button-orange.button-padding-semesta[href*="/Login/Student/SSOToActivity"]',
-  ACCOUNT_TILE: 'div.table[data-test-id="aldo.wibowo@binus.ac.id"]',
+  get ACCOUNT_TILE() {
+    const email = getEmail();
+    return `div.table[data-test-id="${email}"]`;
+  },
   LOGBOOK_TAB: 'li.logBookTab a#btnLogBook',
-  SEPTEMBER_TAB: 'a[onclick*="tabClick"][href="#"]:has-text("September")',
+  get MONTH_TAB() {
+    const monthName = getMonthName(process.env.LOGBOOK_MONTH || 'SEP');
+    return `a[onclick*="tabClick"][href="#"]:has-text("${monthName}")`;
+  },
   
   // Phase 2: Activity form locators
   LOG_BOOK_TABLE: 'table#logBookTable.bordered.table-semesta.dataTable',
