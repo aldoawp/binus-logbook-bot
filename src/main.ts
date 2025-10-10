@@ -6,7 +6,10 @@ import * as dotenv from 'dotenv';
 import * as path from 'path';
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ 
+  path: '.env',
+  encoding: 'utf8'
+});
 
 async function main() {
   const loginBot = new LoginBot();
