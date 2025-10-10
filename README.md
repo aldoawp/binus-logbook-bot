@@ -239,7 +239,7 @@ If you encounter issues:
 
 ## 📝 License
 
-This project is licensed under the ISC License.
+This project is licensed under the Freeware License.
 
 ## 🤝 Contributing
 
