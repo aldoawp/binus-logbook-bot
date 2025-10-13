@@ -39,6 +39,12 @@ Open your terminal/command prompt in the project folder and run:
 npm install
 ```
 
+Wait until the complete, then run this:
+
+```bash
+npx playwright install
+```
+
 This will install all required packages for the bot to work.
 
 #### 3. Configure Your Credentials
