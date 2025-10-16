@@ -32,7 +32,7 @@ class LoginBot {
   private async initializeBrowser(): Promise<void> {
     this.browser = await chromium.launch({
       headless: false, // Set to true for production
-      slowMo: 1000, // Slow down operations for better visibility
+      channel: 'chrome'
     });
 
     this.context = await this.browser.newContext({
