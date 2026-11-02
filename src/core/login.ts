@@ -31,7 +31,7 @@ class LoginBot {
    */
   private async initializeBrowser(): Promise<void> {
     this.browser = await chromium.launch({
-      headless: false, // Set to true for production
+      headless: (process.env.HEADLESS || 'false').toLowerCase() === 'true',
       channel: 'chrome'
     });
 

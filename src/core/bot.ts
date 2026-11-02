@@ -207,10 +207,15 @@ class ActivityBot {
    * Phase 2: Submit all activity entries via LogBook/StudentSave
    */
   public async fillAllActivities(): Promise<void> {
-    try {
-      // Load Excel data first
-      await this.loadExcelData();
+    await this.loadExcelData();
+    await this.submitRows(this.excelData);
+  }
 
+  /**
+   * Submit the given rows via LogBook/StudentSave, matched to the LMS list by date
+   */
+  public async submitRows(inputRows: ActivityData[]): Promise<void> {
+    try {
       if (this.listIsPaged) {
         throw new Error('The LMS logbook list is paged, so existing entries cannot be matched safely');
       }
@@ -222,7 +227,7 @@ class ActivityBot {
       }
       const headerId = [...headerIds][0];
 
-      const rows = this.excelData.filter(row =>
+      const rows = inputRows.filter(row =>
         this.config.onlyDates.length === 0 || this.config.onlyDates.includes(row.date)
       );
 

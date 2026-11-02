@@ -8,7 +8,8 @@
   "main": "src/main.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node --import tsx src/main.ts"
+    "start": "node --import tsx src/main.ts",
+    "telegram": "node --import tsx src/telegram.ts"
   },
   "dependencies": {
     "@types/xlsx": "^0.0.35",
