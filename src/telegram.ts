@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv';
 import { ActivityData } from './types/bot.js';
 import { submitDay, todayInJakarta } from './core/submitDay.js';
-import { isParaphraseEnabled, paraphrase } from './core/paraphrase.js';
+import { isParaphraseEnabled, paraphrase, toParagraph } from './core/paraphrase.js';
 
 dotenv.config({ path: '.env', encoding: 'utf8' });
 
@@ -68,14 +68,14 @@ async function askTitle() {
 }
 
 async function showReview(title: string, raw: string, description: string) {
-  const entry: ActivityData = { date: todayInJakarta(), activity: title, description };
+  const entry: ActivityData = { date: todayInJakarta(), activity: title, description: toParagraph(description) };
   session = { step: 'review', title, raw, entry };
   await send([
     `📅 ${formatDate(entry.date)}`,
     `🕗 ${process.env.CLOCK_IN_TIME} - ${process.env.CLOCK_OUT_TIME}`,
     `📌 Title: ${title}`,
     '',
-    description,
+    entry.description,
     '',
     'Balas "submit" untuk kirim ke logbook, atau ketik ulang isinya untuk mengganti.'
   ].join('\n'), { reply_markup: REVIEW_KEYBOARD });
